@@ -482,14 +482,15 @@
         (captureAnims.length > 0) ||
         (showAtariEl && showAtariEl.checked);
 
-      if(need){
-        draw();
-        rafId = requestAnimationFrame(tick);
-      }
-    };
-    rafId = requestAnimationFrame(tick);
-  }
+      if(!need) return;
 
+    draw();
+    // 改成低頻：150ms 一次，CPU 直接少很多
+    rafId = setTimeout(() => requestAnimationFrame(tick), 150);
+  };
+
+  rafId = requestAnimationFrame(tick);
+}
   // ===== 合法著判定（含簡易打劫） =====
   function isLegalMove(x,y,color){
     if(!inside(x,y)) return false;
@@ -1185,3 +1186,4 @@
   // ===== 初始化 =====
   newGame();
 })();
+
