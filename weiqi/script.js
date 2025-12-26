@@ -221,7 +221,7 @@
     const now = performance.now();
     drawCaptureAnims(now);
     drawLiveAreaOverlay(now);
-    drawAtariOverlay(now);
+    
     drawDeadMarksOverlay(); // 點目死子標記
   }
 
@@ -407,70 +407,7 @@
     ctx.restore();
   }
 
-  // ====== 叫吃警告（Atari） ======
-  function findAtariThreats(){
-    const vis = new Uint8Array(N*N);
-    const threats = [];
 
-    for(let y=0;y<N;y++){
-      for(let x=0;x<N;x++){
-        const id = idx(x,y);
-        const v = board[id];
-        if(v===EMPTY || vis[id]) continue;
-
-        const info = getGroupAndLiberties(board, x, y);
-        for(const [sx,sy] of info.stones){
-          vis[idx(sx,sy)] = 1;
-        }
-
-        if(info.liberties === 1){
-          const libertyId = info.libertySet.values().next().value;
-          threats.push({ color: info.color, stones: info.stones, libertyId });
-        }
-      }
-    }
-    return threats;
-  }
-
-  function drawAtariOverlay(now){
-    if(!showAtariEl || !showAtariEl.checked) return;
-
-    const threats = findAtariThreats();
-    if(threats.length === 0) return;
-
-    const { r } = geom();
-    const pulse = 0.5 + 0.5*Math.sin(now/140);
-
-    ctx.save();
-    for(const t of threats){
-      ctx.strokeStyle = "rgba(255,80,80,0.9)";
-      ctx.lineWidth = Math.max(2, r*0.12);
-      for(const [x,y] of t.stones){
-        const { cx, cy } = toCanvasXY(x,y);
-        ctx.beginPath();
-        ctx.arc(cx, cy, r*0.92, 0, Math.PI*2);
-        ctx.stroke();
-      }
-
-      const lx = t.libertyId % N;
-      const ly = Math.floor(t.libertyId / N);
-      const { cx, cy } = toCanvasXY(lx,ly);
-
-      ctx.strokeStyle = `rgba(255,220,80,${0.35 + 0.45*pulse})`;
-      ctx.lineWidth = Math.max(2, r*0.14);
-      ctx.beginPath();
-      ctx.arc(cx, cy, r*(0.55 + 0.25*pulse), 0, Math.PI*2);
-      ctx.stroke();
-
-      ctx.fillStyle = `rgba(255,220,80,${0.12 + 0.10*pulse})`;
-      ctx.beginPath();
-      ctx.arc(cx, cy, r*(0.35 + 0.20*pulse), 0, Math.PI*2);
-      ctx.fill();
-    }
-    ctx.restore();
-
-    ensureRAF();
-  }
 
   // ====== RAF：只有需要動畫（提子/叫吃閃爍）才跑 ======
   function ensureRAF(){
@@ -480,7 +417,6 @@
 
       const need =
         (captureAnims.length > 0) ||
-        (showAtariEl && showAtariEl.checked);
 
       if(!need) return;
 
@@ -947,10 +883,7 @@
   });
 
   showLiveAreaEl?.addEventListener("change", () => draw());
-  showAtariEl?.addEventListener("change", () => {
-    draw();
-    if(showAtariEl.checked) ensureRAF();
-  });
+
 
   // ===== 點擊落子 / 點目切換死子 =====
   canvas.addEventListener("click", (ev) => {
@@ -1186,4 +1119,5 @@
   // ===== 初始化 =====
   newGame();
 })();
+
 
